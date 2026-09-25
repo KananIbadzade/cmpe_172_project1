@@ -1,0 +1,14 @@
+target/
+HELP.md
+
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+.env
+*.env
+
+# Course handouts and personal notes; not part of the submission
+class/
+progress.md
