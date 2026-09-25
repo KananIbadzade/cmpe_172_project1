@@ -7,6 +7,7 @@ Persistence uses Spring `JdbcTemplate` with handwritten SQL (no ORM).
 - Milestone tag: `milestone-1`
 - Code walkthrough video: [Link](https://youtu.be/V18AfV5O15g)
 - Report Doc file: [Doc_file_Link](https://docs.google.com/document/d/1kcixdiBthgPmq50JXbeE8OWpyh0KBzus3u_8eY8tiVs/edit?tab=t.0)
+- Report PDF file: [PDF_file_link](https://drive.google.com/file/d/1oJ1uNOlKSmQMU1jxG21G12HXYeieXzjw/view?usp=sharing)
 
 ## Milestone 1 scope
 
