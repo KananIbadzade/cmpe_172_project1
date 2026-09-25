@@ -5,7 +5,8 @@ Persistence uses Spring `JdbcTemplate` with handwritten SQL (no ORM).
 
 - Repository: https://github.com/KananIbadzade/cmpe_172_project1
 - Milestone tag: `milestone-1`
-- Code walkthrough video: _add link_
+- Code walkthrough video: [Link](https://youtu.be/V18AfV5O15g)
+- Report Doc file: [Doc_file_Link](https://docs.google.com/document/d/1kcixdiBthgPmq50JXbeE8OWpyh0KBzus3u_8eY8tiVs/edit?tab=t.0)
 
 ## Milestone 1 scope
 
