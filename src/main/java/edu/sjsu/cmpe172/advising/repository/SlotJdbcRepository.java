@@ -63,7 +63,7 @@ public class SlotJdbcRepository {
 
     /**
      * Locks the slot row until the surrounding transaction commits.
-     * Call only inside {@code @Transactional} booking/cancel flows (Phase 4).
+     * Call only inside {@code @Transactional} booking/cancel flows.
      */
     public Optional<AvailabilitySlot> findByIdForUpdate(long id) {
         return jdbcTemplate.query(
@@ -72,6 +72,13 @@ public class SlotJdbcRepository {
                 id)
                 .stream()
                 .findFirst();
+    }
+
+    public void setBooked(long id, boolean booked) {
+        jdbcTemplate.update(
+                "UPDATE availability_slots SET is_booked = ? WHERE id = ?",
+                booked,
+                id);
     }
 
     private static void appendFilters(

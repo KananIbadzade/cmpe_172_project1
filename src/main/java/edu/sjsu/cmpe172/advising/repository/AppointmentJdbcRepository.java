@@ -4,8 +4,11 @@ import edu.sjsu.cmpe172.advising.domain.Appointment;
 import edu.sjsu.cmpe172.advising.domain.AppointmentStatus;
 import edu.sjsu.cmpe172.advising.repository.mapper.AppointmentRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,5 +57,38 @@ public class AppointmentJdbcRepository {
                 AppointmentStatus.BOOKED.name())
                 .stream()
                 .findFirst();
+    }
+
+    public long insert(long customerId, long providerId, long slotId, long serviceId, String notes) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            // Ask only for id — Postgres otherwise returns every column and getKey() fails.
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO appointments (customer_id, provider_id, slot_id, service_id, status, notes)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    new String[] {"id"});
+            ps.setLong(1, customerId);
+            ps.setLong(2, providerId);
+            ps.setLong(3, slotId);
+            ps.setLong(4, serviceId);
+            ps.setString(5, AppointmentStatus.BOOKED.name());
+            ps.setString(6, notes);
+            return ps;
+        }, keyHolder);
+
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Insert did not return appointment id");
+        }
+        return key.longValue();
+    }
+
+    public void updateStatus(long id, AppointmentStatus status) {
+        jdbcTemplate.update(
+                "UPDATE appointments SET status = ? WHERE id = ?",
+                status.name(),
+                id);
     }
 }

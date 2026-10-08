@@ -4,6 +4,7 @@ import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
+import edu.sjsu.cmpe172.advising.service.exception.SlotConflictException;
 import edu.sjsu.cmpe172.advising.service.exception.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -32,4 +33,10 @@ public class ApiExceptionHandler {
     public ProblemDetail handleForbidden(ForbiddenException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     }
+
+    @ExceptionHandler(SlotConflictException.class)
+    public ProblemDetail handleConflict(SlotConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
 }
+
