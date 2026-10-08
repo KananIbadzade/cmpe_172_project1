@@ -5,8 +5,13 @@ import edu.sjsu.cmpe172.advising.repository.mapper.SlotRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +84,41 @@ public class SlotJdbcRepository {
                 "UPDATE availability_slots SET is_booked = ? WHERE id = ?",
                 booked,
                 id);
+    }
+
+    public long insert(long providerId, long serviceId, OffsetDateTime start, OffsetDateTime end) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO availability_slots
+                        (provider_id, service_id, start_time, end_time, is_booked)
+                    VALUES (?, ?, ?, ?, FALSE)
+                    """,
+                    new String[] {"id"});
+            ps.setLong(1, providerId);
+            ps.setLong(2, serviceId);
+            ps.setObject(3, start);
+            ps.setObject(4, end);
+            return ps;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Insert did not return slot id");
+        }
+        return key.longValue();
+    }
+
+    /** Deletes an unbooked slot owned by the provider. Returns false if nothing deleted. */
+    public boolean deleteUnbooked(long slotId, long providerId) {
+        int rows = jdbcTemplate.update(
+                """
+                DELETE FROM availability_slots
+                WHERE id = ? AND provider_id = ? AND is_booked = FALSE
+                """,
+                slotId,
+                providerId);
+        return rows > 0;
     }
 
     private static void appendFilters(

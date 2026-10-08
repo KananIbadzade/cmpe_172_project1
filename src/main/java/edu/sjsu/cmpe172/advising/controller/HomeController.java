@@ -23,7 +23,7 @@ public class HomeController {
         this.milestone = milestone;
     }
 
-    @GetMapping("/")
+    @GetMapping("/api/status")
     public SystemStatusResponse status() {
         return new SystemStatusResponse(system, "UP", environment, Instant.now(), milestone);
     }

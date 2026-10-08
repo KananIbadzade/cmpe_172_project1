@@ -10,14 +10,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Server-side session gate. Public browse/login stay open; role prefixes enforce RBAC.
+ * Browser (non-/api) requests are redirected; API calls get ProblemDetail exceptions.
  */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws IOException {
         String path = request.getRequestURI();
 
         if (isPublic(path)) {
@@ -26,31 +32,71 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         SessionUser user = SessionAuth.getUserOrNull(request.getSession(false));
         if (user == null) {
-            throw new UnauthorizedException("Authentication required");
+            return rejectUnauthenticated(path, request, response);
         }
 
-        if (path.startsWith("/api/advisor") && !user.hasRole(UserRole.ADVISOR)) {
-            throw new ForbiddenException("Advisor role required");
+        if (isAdvisorPath(path) && !user.hasRole(UserRole.ADVISOR)) {
+            return rejectForbidden(path, response, "Advisor role required");
         }
 
-        if (path.startsWith("/api/student") && !user.hasRole(UserRole.STUDENT)) {
-            throw new ForbiddenException("Student role required");
+        if (isStudentPath(path) && !user.hasRole(UserRole.STUDENT)) {
+            return rejectForbidden(path, response, "Student role required");
         }
 
         return true;
     }
 
     private static boolean isPublic(String path) {
-        if ("/".equals(path) || "/login".equals(path) || "/logout".equals(path)) {
+        if ("/".equals(path)
+                || "/login".equals(path)
+                || "/logout".equals(path)
+                || "/slots".equals(path)
+                || "/api/status".equals(path)) {
             return true;
         }
         if (path.startsWith("/api/slots")) {
             return true;
         }
-        // Static resources for the future Thymeleaf UI.
         return path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.startsWith("/webjars/");
+    }
+
+    private static boolean isAdvisorPath(String path) {
+        return path.startsWith("/api/advisor") || path.startsWith("/advisor");
+    }
+
+    private static boolean isStudentPath(String path) {
+        return path.startsWith("/api/student")
+                || path.startsWith("/my-appointments")
+                || path.startsWith("/book");
+    }
+
+    private static boolean isApi(String path) {
+        return path.startsWith("/api/");
+    }
+
+    private static boolean rejectUnauthenticated(
+            String path, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (isApi(path)) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        String redirect = "/login?error=" + url("Please log in first");
+        response.sendRedirect(request.getContextPath() + redirect);
+        return false;
+    }
+
+    private static boolean rejectForbidden(String path, HttpServletResponse response, String message)
+            throws IOException {
+        if (isApi(path)) {
+            throw new ForbiddenException(message);
+        }
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+        return false;
+    }
+
+    private static String url(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

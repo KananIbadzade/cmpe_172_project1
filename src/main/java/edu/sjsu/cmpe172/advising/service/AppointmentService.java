@@ -32,6 +32,10 @@ public class AppointmentService {
         return appointmentRepository.findByCustomerId(customerId);
     }
 
+    public List<Appointment> listForProvider(long providerId) {
+        return appointmentRepository.findByProviderId(providerId);
+    }
+
     /**
      * Book a free slot for a student. Locks the slot row so two concurrent bookers
      * cannot both succeed; the partial unique index is the final backstop.

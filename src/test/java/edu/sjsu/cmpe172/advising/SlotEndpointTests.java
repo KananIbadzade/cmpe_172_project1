@@ -29,7 +29,7 @@ class SlotEndpointTests {
 
     @Test
     void homeReturnsSystemStatus() throws Exception {
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/api/status"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.system").value("advising-scheduler"))
