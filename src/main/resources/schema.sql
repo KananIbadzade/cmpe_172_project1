@@ -1,4 +1,4 @@
--- CMPE 172 Term Project Milestone 1
+-- CMPE 172 Term Project Milestone 2
 -- Schema DDL: Academic Advising Scheduling System
 -- Target: PostgreSQL 14+
 
@@ -57,13 +57,18 @@ CREATE TABLE appointments (
     provider_id BIGINT NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
     slot_id BIGINT NOT NULL REFERENCES availability_slots(id) ON DELETE RESTRICT,
     service_id BIGINT NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
-    status VARCHAR(20) NOT NULL DEFAULT 'BOOKED' CHECK (status IN ('BOOKED', 'CANCELLED')),
+    status VARCHAR(20) NOT NULL DEFAULT 'BOOKED'
+        CHECK (status IN ('BOOKED', 'CANCELLED', 'COMPLETED')),
     notes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    -- Double-booking guard: at most one appointment row per slot
-    CONSTRAINT uq_appointment_active_slot UNIQUE (slot_id)
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Only one active booking per slot. CANCELLED / COMPLETED rows keep history and allow rebook.
+CREATE UNIQUE INDEX uq_appointment_active_slot
+    ON appointments(slot_id) WHERE status = 'BOOKED';
 
 -- uq_provider_slot already indexes (provider_id, start_time).
 CREATE INDEX idx_slots_available_start ON availability_slots(start_time) WHERE is_booked = FALSE;
+CREATE INDEX idx_slots_provider_start ON availability_slots(provider_id, start_time);
 CREATE INDEX idx_appointments_customer ON appointments(customer_id);
+CREATE INDEX idx_appointments_provider ON appointments(provider_id);

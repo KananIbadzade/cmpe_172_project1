@@ -35,4 +35,24 @@ public class SlotJdbcRepository {
                 .stream()
                 .findFirst();
     }
+
+    public List<AvailabilitySlot> findByProviderId(long providerId) {
+        return jdbcTemplate.query(
+                SELECT_SLOT + "WHERE provider_id = ? ORDER BY start_time, id",
+                ROW_MAPPER,
+                providerId);
+    }
+
+    /**
+     * Locks the slot row until the surrounding transaction commits.
+     * Call only inside {@code @Transactional} booking/cancel flows (Phase 4).
+     */
+    public Optional<AvailabilitySlot> findByIdForUpdate(long id) {
+        return jdbcTemplate.query(
+                SELECT_SLOT + "WHERE id = ? FOR UPDATE",
+                ROW_MAPPER,
+                id)
+                .stream()
+                .findFirst();
+    }
 }

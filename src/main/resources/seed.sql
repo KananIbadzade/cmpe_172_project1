@@ -1,7 +1,10 @@
--- CMPE 172 Term Project Milestone 1
+-- CMPE 172 Term Project Milestone 2
 -- Seed data: Academic Advising Scheduling System
 -- IDs are deterministic because schema.sql recreates every table (and its sequence) on startup.
--- Every seeded account uses the demo password "password123" (BCrypt, cost 10).
+--
+-- Demo credentials (BCrypt cost 10). Password for every account: password123
+--   ADVISOR: maria.chen@sjsu.edu, david.nguyen@sjsu.edu, priya.patel@sjsu.edu
+--   STUDENT: alex.kim@sjsu.edu, jordan.lee@sjsu.edu, sam.rivera@sjsu.edu
 
 INSERT INTO users (email, password_hash, full_name, role) VALUES
     ('maria.chen@sjsu.edu',   '$2a$10$VjVWT4GCpyLo7uffBYJCNuTaUU2hRAKrP/rEweUDdopFBwTOQH.zS', 'Maria Chen',   'ADVISOR'),
@@ -23,6 +26,7 @@ INSERT INTO services (name, description, duration_minutes, price) VALUES
     ('Course Planning',           'Plan next semester''s schedule and prerequisite sequence.',                30, 0.00);
 
 -- Relative dates keep seeded slots in the future whenever the app starts.
+-- Slots 1 and 5 are BOOKED; slot 9 is COMPLETED (past); slot 3 has a CANCELLED history row and stays free.
 INSERT INTO availability_slots (provider_id, service_id, start_time, end_time, is_booked) VALUES
     (1, 1, (CURRENT_DATE + 1) + TIME '09:00', (CURRENT_DATE + 1) + TIME '09:30', TRUE),
     (1, 4, (CURRENT_DATE + 1) + TIME '10:00', (CURRENT_DATE + 1) + TIME '10:30', FALSE),
@@ -31,8 +35,11 @@ INSERT INTO availability_slots (provider_id, service_id, start_time, end_time, i
     (2, 4, (CURRENT_DATE + 2) + TIME '14:00', (CURRENT_DATE + 2) + TIME '14:30', TRUE),
     (2, 2, (CURRENT_DATE + 3) + TIME '11:00', (CURRENT_DATE + 3) + TIME '11:30', FALSE),
     (3, 3, (CURRENT_DATE + 1) + TIME '15:00', (CURRENT_DATE + 1) + TIME '15:45', FALSE),
-    (3, 3, (CURRENT_DATE + 3) + TIME '15:00', (CURRENT_DATE + 3) + TIME '15:45', FALSE);
+    (3, 3, (CURRENT_DATE + 3) + TIME '15:00', (CURRENT_DATE + 3) + TIME '15:45', FALSE),
+    (1, 4, (CURRENT_DATE - 2) + TIME '11:00', (CURRENT_DATE - 2) + TIME '11:30', TRUE);
 
 INSERT INTO appointments (customer_id, provider_id, slot_id, service_id, status, notes) VALUES
-    (4, 1, 1, 1, 'BOOKED', 'Confirm remaining GE areas before filing for graduation.'),
-    (5, 2, 5, 4, 'BOOKED', 'Plan upper-division CMPE prerequisites for next semester.');
+    (4, 1, 1, 1, 'BOOKED',    'Confirm remaining GE areas before filing for graduation.'),
+    (5, 2, 5, 4, 'BOOKED',    'Plan upper-division CMPE prerequisites for next semester.'),
+    (6, 1, 3, 1, 'CANCELLED', 'Student cancelled; slot remains available for rebooking.'),
+    (4, 1, 9, 4, 'COMPLETED', 'Past course-planning session used for history views.');
