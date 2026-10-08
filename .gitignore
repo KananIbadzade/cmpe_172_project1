@@ -9,7 +9,11 @@ HELP.md
 .env
 *.env
 
-# Course handouts and personal notes; not part of the submission
+# Course handouts and personal notes; not part of the public repo
 class/
 progress.md
 DESIGN_ARTIFACTS.md
+MILESTONE_2_REPORT.md
+MILESTONE_*_REPORT.md
+*_REPORT.md
+*.draft.md
