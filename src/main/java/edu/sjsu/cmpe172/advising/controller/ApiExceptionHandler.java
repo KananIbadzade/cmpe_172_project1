@@ -1,5 +1,6 @@
 package edu.sjsu.cmpe172.advising.controller;
 
+import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
@@ -11,6 +12,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(BadRequestException.class)
+    public ProblemDetail handleBadRequest(BadRequestException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
