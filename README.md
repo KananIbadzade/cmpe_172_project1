@@ -6,9 +6,10 @@ Persistence uses Spring `JdbcTemplate` with handwritten SQL (no ORM / JPA).
 - Repository: https://github.com/KananIbadzade/cmpe_172_project1
 - Milestone 1 tag: `milestone-1`
 - Milestone 1 walkthrough: [video](https://youtu.be/V18AfV5O15g)
-- Milestone 2 walkthrough video: _add link_
 - Milestone 1 report: [Doc](https://docs.google.com/document/d/1kcixdiBthgPmq50JXbeE8OWpyh0KBzus3u_8eY8tiVs/edit?tab=t.0) · [PDF](https://drive.google.com/file/d/1oJ1uNOlKSmQMU1jxG21G12HXYeieXzjw/view?usp=sharing)
 
+- - Milestone 2 walkthrough video: [video](https://www.youtube.com/watch?v=cAGsdzeKHjU)
+- - Milestone 1 report: [Doc](https://docs.google.com/document/d/1IRcGIQ7sCrrhUWwF40zel0zZk2Wm7761Cz6F6hUwZCQ/edit?tab=t.0) · [PDF](https://drive.google.com/file/d/1oJ1uNOlKSmQMU1jxG21G12HXYeieXzjw/view?usp=sharing)
 ## Milestone 2 features
 
 - Thymeleaf + Bootstrap UI for students and advisors
