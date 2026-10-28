@@ -1,0 +1,84 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    # Throwaway PostgreSQL for this job only; the password never leaves the runner.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: advising
+          POSTGRES_USER: advising
+          POSTGRES_PASSWORD: advising-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U advising -d advising"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/advising
+      DB_USERNAME: advising
+      DB_PASSWORD: advising-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and run tests
+        run: ./mvnw -B verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+
+  docker:
+    name: Docker Compose smoke test
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for compose
+        run: printf 'DB_USERNAME=advising\nDB_PASSWORD=compose-ci\n' > .env
+
+      - name: Build and start app + database
+        run: docker compose up -d --build
+
+      - name: Wait for /health to report UP
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8080/health | grep -q '"status":"UP"'; then
+              curl -s http://localhost:8080/health
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "App did not become healthy in time"
+          exit 1
+
+      - name: Show container logs
+        if: always()
+        run: docker compose logs
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down
