@@ -10,6 +10,7 @@ import edu.sjsu.cmpe172.advising.dto.SlotResponse;
 import edu.sjsu.cmpe172.advising.repository.ProviderJdbcRepository;
 import edu.sjsu.cmpe172.advising.repository.ServiceJdbcRepository;
 import edu.sjsu.cmpe172.advising.service.AppointmentService;
+import edu.sjsu.cmpe172.advising.service.AppointmentWorkflow;
 import edu.sjsu.cmpe172.advising.service.AuthService;
 import edu.sjsu.cmpe172.advising.service.SlotService;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
@@ -37,6 +38,7 @@ public class UiPageController {
     private final AuthService authService;
     private final SlotService slotService;
     private final AppointmentService appointmentService;
+    private final AppointmentWorkflow appointmentWorkflow;
     private final ProviderJdbcRepository providerRepository;
     private final ServiceJdbcRepository serviceRepository;
 
@@ -44,11 +46,13 @@ public class UiPageController {
             AuthService authService,
             SlotService slotService,
             AppointmentService appointmentService,
+            AppointmentWorkflow appointmentWorkflow,
             ProviderJdbcRepository providerRepository,
             ServiceJdbcRepository serviceRepository) {
         this.authService = authService;
         this.slotService = slotService;
         this.appointmentService = appointmentService;
+        this.appointmentWorkflow = appointmentWorkflow;
         this.providerRepository = providerRepository;
         this.serviceRepository = serviceRepository;
     }
@@ -142,7 +146,7 @@ public class UiPageController {
             RedirectAttributes redirectAttributes) {
         SessionUser user = SessionAuth.requireRole(request.getSession(false), UserRole.STUDENT);
         try {
-            Appointment appointment = appointmentService.book(slotId, user.id(), notes);
+            Appointment appointment = appointmentWorkflow.book(slotId, user.id(), notes);
             redirectAttributes.addAttribute("id", appointment.id());
             return "redirect:/confirmation";
         } catch (Exception ex) {
@@ -186,7 +190,7 @@ public class UiPageController {
             RedirectAttributes redirectAttributes) {
         SessionUser user = SessionAuth.requireRole(request.getSession(false), UserRole.STUDENT);
         try {
-            appointmentService.cancel(id, user.id());
+            appointmentWorkflow.cancel(id, user.id());
             redirectAttributes.addFlashAttribute("message", "Appointment cancelled.");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());

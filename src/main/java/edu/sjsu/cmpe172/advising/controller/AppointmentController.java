@@ -6,6 +6,7 @@ import edu.sjsu.cmpe172.advising.domain.UserRole;
 import edu.sjsu.cmpe172.advising.dto.AppointmentResponse;
 import edu.sjsu.cmpe172.advising.dto.BookRequest;
 import edu.sjsu.cmpe172.advising.service.AppointmentService;
+import edu.sjsu.cmpe172.advising.service.AppointmentWorkflow;
 import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,11 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final AppointmentWorkflow appointmentWorkflow;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentService appointmentService, AppointmentWorkflow appointmentWorkflow) {
         this.appointmentService = appointmentService;
+        this.appointmentWorkflow = appointmentWorkflow;
     }
 
     @GetMapping
@@ -45,12 +48,12 @@ public class AppointmentController {
             throw new BadRequestException("slotId is required");
         }
         return AppointmentResponse.from(
-                appointmentService.book(body.slotId(), user.id(), body.notes()));
+                appointmentWorkflow.book(body.slotId(), user.id(), body.notes()));
     }
 
     @PostMapping("/{id}/cancel")
     public AppointmentResponse cancel(@PathVariable long id, HttpServletRequest request) {
         SessionUser user = SessionAuth.requireRole(request.getSession(false), UserRole.STUDENT);
-        return AppointmentResponse.from(appointmentService.cancel(id, user.id()));
+        return AppointmentResponse.from(appointmentWorkflow.cancel(id, user.id()));
     }
 }
