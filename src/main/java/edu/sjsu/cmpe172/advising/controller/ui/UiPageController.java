@@ -13,8 +13,13 @@ import edu.sjsu.cmpe172.advising.service.AppointmentService;
 import edu.sjsu.cmpe172.advising.service.AppointmentWorkflow;
 import edu.sjsu.cmpe172.advising.service.AuthService;
 import edu.sjsu.cmpe172.advising.service.SlotService;
+import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
+import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
+import edu.sjsu.cmpe172.advising.service.exception.SlotConflictException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,6 +39,8 @@ import java.util.List;
 
 @Controller
 public class UiPageController {
+
+    private static final Logger log = LoggerFactory.getLogger(UiPageController.class);
 
     private final AuthService authService;
     private final SlotService slotService;
@@ -150,7 +157,7 @@ public class UiPageController {
             redirectAttributes.addAttribute("id", appointment.id());
             return "redirect:/confirmation";
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", userMessage(ex));
             return "redirect:/slots";
         }
     }
@@ -193,7 +200,7 @@ public class UiPageController {
             appointmentWorkflow.cancel(id, user.id());
             redirectAttributes.addFlashAttribute("message", "Appointment cancelled.");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", userMessage(ex));
         }
         return "redirect:/my-appointments";
     }
@@ -228,7 +235,7 @@ public class UiPageController {
                     endTime.atZone(zone).toOffsetDateTime());
             redirectAttributes.addFlashAttribute("message", "Slot published.");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", userMessage(ex));
         }
         return "redirect:/advisor";
     }
@@ -244,7 +251,7 @@ public class UiPageController {
             slotService.deleteUnbookedSlot(id, provider.id());
             redirectAttributes.addFlashAttribute("message", "Slot removed.");
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("error", userMessage(ex));
         }
         return "redirect:/advisor";
     }
@@ -266,6 +273,18 @@ public class UiPageController {
         return serviceRepository.findById(serviceId)
                 .map(s -> s.name())
                 .orElse("Service #" + serviceId);
+    }
+
+    /** Our own exceptions carry user-facing text; anything else may hold SQL or internals. */
+    private static String userMessage(Exception ex) {
+        if (ex instanceof SlotConflictException
+                || ex instanceof BadRequestException
+                || ex instanceof ForbiddenException
+                || ex instanceof ResourceNotFoundException) {
+            return ex.getMessage();
+        }
+        log.error("unexpected error in UI action type={}", ex.getClass().getSimpleName(), ex);
+        return "Something went wrong. Please try again.";
     }
 
     private static String redirectForRole(SessionUser user) {

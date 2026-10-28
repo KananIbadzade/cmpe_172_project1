@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -24,7 +25,8 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
-        String path = request.getRequestURI();
+        // Decoded and normalized like Spring's routing; the raw URI would let "/api/%61dvisor" skip the role check.
+        String path = UrlPathHelper.defaultInstance.getPathWithinApplication(request);
 
         if (isPublic(path)) {
             return true;

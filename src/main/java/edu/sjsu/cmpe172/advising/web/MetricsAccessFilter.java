@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 
@@ -32,7 +33,8 @@ public class MetricsAccessFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/metrics");
+        // Decoded path, so "/%6Detrics" is treated as "/metrics".
+        return !UrlPathHelper.defaultInstance.getPathWithinApplication(request).startsWith("/metrics");
     }
 
     @Override
