@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.TestPropertySource;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "app.notification.mock.mode=DOWN"
         })
 @AutoConfigureMockMvc
+@Sql({"/schema.sql", "/seed.sql"})
 class BookingWhenNotificationDownTests {
 
     private static final String STUDENT_EMAIL = "alex.kim@sjsu.edu";

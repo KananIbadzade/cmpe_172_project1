@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Sql({"/schema.sql", "/seed.sql"})
 class HealthAndMetricsTests {
 
     private static final String STUDENT_EMAIL = "jordan.lee@sjsu.edu";
@@ -24,10 +25,6 @@ class HealthAndMetricsTests {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
     @Test
     void healthIsPublicAndChecksTheDatabase() throws Exception {
         mockMvc.perform(get("/health"))
@@ -53,12 +50,7 @@ class HealthAndMetricsTests {
 
     @Test
     void bookingOutcomesAndLatencyAreRecorded() throws Exception {
-        // This context is shared with other test classes, so use a fresh slot instead of a seed one.
-        Long slotId = jdbcTemplate.queryForObject("""
-                INSERT INTO availability_slots (provider_id, service_id, start_time, end_time)
-                VALUES (1, 1, CURRENT_DATE + 40 + TIME '08:00', CURRENT_DATE + 40 + TIME '08:30')
-                RETURNING id
-                """, Long.class);
+        long slotId = 6;
 
         MockHttpSession student = ApiSteps.login(mockMvc, STUDENT_EMAIL);
         ApiSteps.book(mockMvc, student, slotId);
