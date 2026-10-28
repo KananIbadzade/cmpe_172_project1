@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
+                "app.notification.base-url=",
                 "app.notification.max-attempts=3",
                 "app.notification.retry-backoff-ms=50"
         })
