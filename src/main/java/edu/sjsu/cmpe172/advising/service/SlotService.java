@@ -8,6 +8,8 @@ import edu.sjsu.cmpe172.advising.repository.SlotJdbcRepository;
 import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Service
 public class SlotService {
+
+    private static final Logger log = LoggerFactory.getLogger(SlotService.class);
 
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int MAX_PAGE_SIZE = 50;
@@ -70,6 +74,7 @@ public class SlotService {
                 .orElseThrow(() -> new ResourceNotFoundException("Service", serviceId));
         try {
             long id = slotRepository.insert(providerId, serviceId, start, end);
+            log.info("slot published slotId={} providerId={} start={}", id, providerId, start);
             return slotRepository.findById(id)
                     .orElseThrow(() -> new IllegalStateException("Created slot not found"));
         } catch (DuplicateKeyException ex) {
@@ -89,6 +94,7 @@ public class SlotService {
         if (!slotRepository.deleteUnbooked(slotId, providerId)) {
             throw new BadRequestException("Slot could not be removed");
         }
+        log.info("slot removed slotId={} providerId={}", slotId, providerId);
     }
 
     private static SlotResponse toResponse(AvailabilitySlot slot) {

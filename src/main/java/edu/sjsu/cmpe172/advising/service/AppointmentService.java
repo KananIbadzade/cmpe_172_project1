@@ -9,6 +9,8 @@ import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
 import edu.sjsu.cmpe172.advising.service.exception.SlotConflictException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentJdbcRepository appointmentRepository;
     private final SlotJdbcRepository slotRepository;
@@ -60,6 +64,7 @@ public class AppointmentService {
             return appointmentRepository.findById(appointmentId)
                     .orElseThrow(() -> new IllegalStateException("Booked appointment not found"));
         } catch (DuplicateKeyException ex) {
+            log.warn("unique index rejected booking slotId={} customerId={}", slotId, customerId);
             throw new SlotConflictException("Slot " + slotId + " is already booked");
         }
     }
@@ -73,6 +78,8 @@ public class AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment", appointmentId));
 
         if (appointment.customerId() != customerId) {
+            log.warn("cancel denied appointmentId={} requestedBy={} ownerId={}",
+                    appointmentId, customerId, appointment.customerId());
             throw new ForbiddenException("Only the appointment owner can cancel");
         }
         if (!AppointmentStatus.BOOKED.name().equals(appointment.status())) {

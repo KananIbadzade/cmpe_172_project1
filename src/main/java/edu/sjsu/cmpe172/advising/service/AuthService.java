@@ -4,11 +4,15 @@ import edu.sjsu.cmpe172.advising.auth.SessionUser;
 import edu.sjsu.cmpe172.advising.domain.User;
 import edu.sjsu.cmpe172.advising.repository.UserJdbcRepository;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserJdbcRepository userJdbcRepository;
     private final PasswordEncoder passwordEncoder;
@@ -28,12 +32,14 @@ public class AuthService {
 
         User user = userJdbcRepository.findByEmail(email.trim().toLowerCase())
                 .or(() -> userJdbcRepository.findByEmail(email.trim()))
-                .orElseThrow(InvalidCredentialsException::new);
+                .orElse(null);
 
-        if (!passwordEncoder.matches(password, user.passwordHash())) {
+        if (user == null || !passwordEncoder.matches(password, user.passwordHash())) {
+            log.warn("login failed email={}", email.trim());
             throw new InvalidCredentialsException();
         }
 
+        log.info("login succeeded userId={} role={}", user.id(), user.role());
         return SessionUser.from(user);
     }
 }

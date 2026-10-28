@@ -4,6 +4,8 @@ import edu.sjsu.cmpe172.advising.domain.Appointment;
 import edu.sjsu.cmpe172.advising.notification.AppointmentNotifier;
 import edu.sjsu.cmpe172.advising.observability.BookingMetrics;
 import edu.sjsu.cmpe172.advising.service.exception.SlotConflictException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AppointmentWorkflow {
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentWorkflow.class);
 
     private final AppointmentService appointmentService;
     private final AppointmentNotifier notifier;
@@ -37,18 +41,24 @@ public class AppointmentWorkflow {
             metrics.bookingOutcome("success");
         } catch (SlotConflictException ex) {
             metrics.bookingOutcome("conflict");
+            log.warn("booking rejected slotId={} customerId={} reason=slot already booked", slotId, customerId);
             throw ex;
         } catch (RuntimeException ex) {
             metrics.bookingOutcome("failed");
+            log.warn("booking failed slotId={} customerId={} reason={}", slotId, customerId, ex.getMessage());
             throw ex;
         }
 
+        log.info("booking committed appointmentId={} slotId={} customerId={}",
+                appointment.id(), slotId, customerId);
         notifier.bookingConfirmed(appointment);
         return appointment;
     }
 
     public Appointment cancel(long appointmentId, long customerId) {
         Appointment appointment = appointmentService.cancel(appointmentId, customerId);
+        log.info("cancellation committed appointmentId={} slotId={} customerId={}",
+                appointment.id(), appointment.slotId(), customerId);
         notifier.bookingCancelled(appointment);
         return appointment;
     }
