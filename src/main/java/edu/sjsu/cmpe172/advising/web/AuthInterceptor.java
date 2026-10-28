@@ -54,7 +54,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                 || "/api/status".equals(path)) {
             return true;
         }
-        if (path.startsWith("/api/slots")) {
+        // The mock notification service plays an external system, so it has no app session.
+        if (path.startsWith("/api/slots") || path.startsWith("/api/notifications")) {
             return true;
         }
         return path.startsWith("/css/")
