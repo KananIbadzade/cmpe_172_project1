@@ -5,6 +5,7 @@ import edu.sjsu.cmpe172.advising.domain.AvailabilitySlot;
 import edu.sjsu.cmpe172.advising.domain.User;
 import edu.sjsu.cmpe172.advising.dto.NotificationRequest;
 import edu.sjsu.cmpe172.advising.dto.NotificationType;
+import edu.sjsu.cmpe172.advising.observability.BookingMetrics;
 import edu.sjsu.cmpe172.advising.repository.SlotJdbcRepository;
 import edu.sjsu.cmpe172.advising.repository.UserJdbcRepository;
 import org.slf4j.Logger;
@@ -24,14 +25,17 @@ public class AppointmentNotifier {
     private final NotificationGateway gateway;
     private final UserJdbcRepository userRepository;
     private final SlotJdbcRepository slotRepository;
+    private final BookingMetrics metrics;
 
     public AppointmentNotifier(
             NotificationGateway gateway,
             UserJdbcRepository userRepository,
-            SlotJdbcRepository slotRepository) {
+            SlotJdbcRepository slotRepository,
+            BookingMetrics metrics) {
         this.gateway = gateway;
         this.userRepository = userRepository;
         this.slotRepository = slotRepository;
+        this.metrics = metrics;
     }
 
     public NotificationResult bookingConfirmed(Appointment appointment) {
@@ -52,11 +56,14 @@ public class AppointmentNotifier {
             String message = "Your advising appointment #%d on %s %s."
                     .formatted(appointment.id(), slot.startTime(), outcome);
 
-            return gateway.send(new NotificationRequest(
+            NotificationResult result = gateway.send(new NotificationRequest(
                     student.email(), type, message, idempotencyKey(appointment, type)));
+            metrics.notificationResult(type, result.delivered());
+            return result;
         } catch (RuntimeException ex) {
             log.error("notification skipped appointmentId={} type={} reason={}",
                     appointment.id(), type, ex.toString());
+            metrics.notificationResult(type, false);
             return NotificationResult.notDelivered(0);
         }
     }
