@@ -11,6 +11,7 @@ import edu.sjsu.cmpe172.advising.service.AppointmentService;
 import edu.sjsu.cmpe172.advising.service.SlotService;
 import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
 import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,7 @@ public class AdvisingTools {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd HH:mm");
     private static final int SEARCH_LIMIT = 10;
     private static final int ALTERNATIVES_LIMIT = 3;
+    private static final int POLICY_CHUNKS = 3;
 
     public record SlotInfo(long slotId, String advisor, String service, String start) {
         String describe() {
@@ -51,6 +53,7 @@ public class AdvisingTools {
     private final ProviderJdbcRepository providerRepository;
     private final ServiceJdbcRepository serviceRepository;
     private final PendingActionStore pendingActions;
+    private final KnowledgeBase knowledge;
     private final Clock clock;
 
     public AdvisingTools(
@@ -59,12 +62,14 @@ public class AdvisingTools {
             ProviderJdbcRepository providerRepository,
             ServiceJdbcRepository serviceRepository,
             PendingActionStore pendingActions,
+            KnowledgeBase knowledge,
             Clock clock) {
         this.slotService = slotService;
         this.appointmentService = appointmentService;
         this.providerRepository = providerRepository;
         this.serviceRepository = serviceRepository;
         this.pendingActions = pendingActions;
+        this.knowledge = knowledge;
         this.clock = clock;
     }
 
@@ -138,6 +143,17 @@ public class AdvisingTools {
                 PendingAction.Type.CANCEL, appointmentId, null, summary, userId, Instant.now(clock)));
         return "Nothing is cancelled yet. Proposal: " + summary
                 + ". Ask the student to reply yes to confirm or no to keep it.";
+    }
+
+    @Tool(description = "Look up the advising office's policies and FAQ: office hours, locations, services, "
+            + "booking rules, cancellation and no-show policy, what to bring, reminders. "
+            + "Answer policy questions only from what this returns.")
+    public String searchPolicies(@ToolParam(description = "The student's question") String question) {
+        List<Document> chunks = knowledge.search(question, POLICY_CHUNKS);
+        if (chunks.isEmpty()) {
+            return "No policy information found.";
+        }
+        return chunks.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
     }
 
     /**

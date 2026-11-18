@@ -60,6 +60,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/slots") || path.startsWith("/api/notifications")) {
             return true;
         }
+        // Public policy FAQ.
+        if (path.startsWith("/api/assistant/")) {
+            return true;
+        }
         return path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")

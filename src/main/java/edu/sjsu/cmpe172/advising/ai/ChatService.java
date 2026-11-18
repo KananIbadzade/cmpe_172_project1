@@ -114,6 +114,8 @@ public class ChatService {
                 then show the student the summary and ask them to reply yes to confirm. \
                 Never say a booking or cancellation is done.
                 - If a slot is taken, offer the alternatives the tool returns.
+                - For questions about hours, locations, services or policies, call searchPolicies and answer \
+                only from what it returns. If it does not cover the question, say you don't know.
                 - Keep replies short and friendly.
                 """.formatted(user.fullName(), today.getDayOfWeek(), today, clock.getZone(), tools.catalog());
     }

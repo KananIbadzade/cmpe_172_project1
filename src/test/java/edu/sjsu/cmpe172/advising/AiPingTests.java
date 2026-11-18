@@ -74,6 +74,15 @@ class AiPingTests {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void assistantAskReturns503WhenAiNotConfigured() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\":\"When is the office open?\"}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.detail").value("AI assistant is not configured"));
+    }
+
     private static MockHttpServletRequestBuilder chat(MockHttpSession session, String message) {
         return post("/api/student/chat")
                 .session(session)
