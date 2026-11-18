@@ -14,6 +14,7 @@ import java.util.function.Supplier;
  *   <li>{@code advising.bookings} (tag outcome=success|conflict|failed): bookings attempted</li>
  *   <li>{@code advising.booking.latency}: time spent in the booking transaction</li>
  *   <li>{@code advising.notifications} (tags type, result=delivered|fallback): remote calls</li>
+ *   <li>{@code advising.reminder.messages} (tag source=llm|template): reminders written by the agent</li>
  * </ul>
  */
 @Component
@@ -37,6 +38,14 @@ public class BookingMetrics {
         Counter.builder("advising.bookings")
                 .description("Booking attempts by outcome")
                 .tag("outcome", outcome)
+                .register(registry)
+                .increment();
+    }
+
+    public void reminderMessage(String source) {
+        Counter.builder("advising.reminder.messages")
+                .description("Reminder texts by source")
+                .tag("source", source)
                 .register(registry)
                 .increment();
     }

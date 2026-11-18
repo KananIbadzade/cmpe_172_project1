@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +27,7 @@ class AdvisingApplicationTests {
     private Flyway flyway;
 
     @Test
-    void restartKeepsExistingBookings() {
+    void restartKeepsExistingBookings() throws IOException {
         // A new booking that is not part of the seed data.
         jdbcTemplate.update(
                 "INSERT INTO appointments (customer_id, provider_id, slot_id, service_id, notes) VALUES (?, ?, ?, ?, ?)",
@@ -38,9 +40,12 @@ class AdvisingApplicationTests {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM appointments WHERE notes = 'survives restart'", Integer.class))
                 .isEqualTo(1);
+        // Every migration file has been applied exactly once, however many there are.
+        int migrationFiles = new PathMatchingResourcePatternResolver()
+                .getResources("classpath:db/migration/V*.sql").length;
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success", Integer.class))
-                .isEqualTo(2);
+                .isEqualTo(migrationFiles);
     }
 
     @Test

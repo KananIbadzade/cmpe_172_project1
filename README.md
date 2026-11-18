@@ -67,6 +67,9 @@ createdb -O advising advising
 | `GEMINI_API_KEY`         | _(empty = AI off)_                          | Free Google AI Studio key for the AI features |
 | `GEMINI_CHAT_MODEL`      | `gemini-3.8-flash`                          | Gemini chat model                           |
 | `GEMINI_EMBEDDING_MODEL` | `gemini-embedding-001`                      | Gemini embedding model                      |
+| `REMINDERS_ENABLED`      | `true`                                      | Run the reminder job on its schedule        |
+| `REMINDERS_CRON`         | `0 */15 * * * *`                            | Reminder job schedule (every 15 minutes)    |
+| `REMINDER_WINDOW_HOURS`  | `24`                                        | Remind appointments starting within this many hours |
 
 Set `DB_PASSWORD` if your PostgreSQL role requires a password.
 

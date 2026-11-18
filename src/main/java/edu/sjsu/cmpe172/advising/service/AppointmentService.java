@@ -3,6 +3,7 @@ package edu.sjsu.cmpe172.advising.service;
 import edu.sjsu.cmpe172.advising.domain.Appointment;
 import edu.sjsu.cmpe172.advising.domain.AppointmentStatus;
 import edu.sjsu.cmpe172.advising.domain.AvailabilitySlot;
+import edu.sjsu.cmpe172.advising.domain.ReminderCandidate;
 import edu.sjsu.cmpe172.advising.repository.AppointmentJdbcRepository;
 import edu.sjsu.cmpe172.advising.repository.SlotJdbcRepository;
 import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
@@ -15,6 +16,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -38,6 +40,15 @@ public class AppointmentService {
 
     public List<Appointment> listForProvider(long providerId) {
         return appointmentRepository.findByProviderId(providerId);
+    }
+
+    /** Booked appointments starting in (from, to] that have not had a reminder delivered yet. */
+    public List<ReminderCandidate> listDueForReminder(OffsetDateTime from, OffsetDateTime to) {
+        return appointmentRepository.findDueForReminder(from, to);
+    }
+
+    public void markReminderSent(long appointmentId) {
+        appointmentRepository.markReminderSent(appointmentId);
     }
 
     /**

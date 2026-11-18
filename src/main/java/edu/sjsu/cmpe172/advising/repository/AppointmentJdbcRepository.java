@@ -2,6 +2,7 @@ package edu.sjsu.cmpe172.advising.repository;
 
 import edu.sjsu.cmpe172.advising.domain.Appointment;
 import edu.sjsu.cmpe172.advising.domain.AppointmentStatus;
+import edu.sjsu.cmpe172.advising.domain.ReminderCandidate;
 import edu.sjsu.cmpe172.advising.repository.mapper.AppointmentRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,6 +91,42 @@ public class AppointmentJdbcRepository {
         jdbcTemplate.update(
                 "UPDATE appointments SET status = ? WHERE id = ?",
                 status.name(),
+                id);
+    }
+
+    /** BOOKED appointments starting in (from, to] whose reminder has not been delivered yet. */
+    public List<ReminderCandidate> findDueForReminder(OffsetDateTime from, OffsetDateTime to) {
+        return jdbcTemplate.query(
+                """
+                SELECT a.id, student.full_name AS student_name, student.email AS student_email,
+                       advisor.full_name AS advisor_name, p.office_location,
+                       sv.name AS service_name, s.start_time
+                FROM appointments a
+                JOIN users student ON student.id = a.customer_id
+                JOIN providers p ON p.id = a.provider_id
+                JOIN users advisor ON advisor.id = p.user_id
+                JOIN services sv ON sv.id = a.service_id
+                JOIN availability_slots s ON s.id = a.slot_id
+                WHERE a.status = 'BOOKED'
+                  AND a.reminder_sent_at IS NULL
+                  AND s.start_time > ? AND s.start_time <= ?
+                ORDER BY s.start_time, a.id
+                """,
+                (rs, rowNum) -> new ReminderCandidate(
+                        rs.getLong("id"),
+                        rs.getString("student_name"),
+                        rs.getString("student_email"),
+                        rs.getString("advisor_name"),
+                        rs.getString("office_location"),
+                        rs.getString("service_name"),
+                        rs.getObject("start_time", OffsetDateTime.class)),
+                from,
+                to);
+    }
+
+    public void markReminderSent(long id) {
+        jdbcTemplate.update(
+                "UPDATE appointments SET reminder_sent_at = CURRENT_TIMESTAMP WHERE id = ? AND reminder_sent_at IS NULL",
                 id);
     }
 }
