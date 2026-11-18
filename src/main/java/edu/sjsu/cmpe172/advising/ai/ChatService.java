@@ -2,6 +2,7 @@ package edu.sjsu.cmpe172.advising.ai;
 
 import edu.sjsu.cmpe172.advising.auth.SessionUser;
 import edu.sjsu.cmpe172.advising.domain.Appointment;
+import edu.sjsu.cmpe172.advising.dto.ChatHistoryMessage;
 import edu.sjsu.cmpe172.advising.dto.ChatResponse;
 import edu.sjsu.cmpe172.advising.dto.ChatResponse.PendingSummary;
 import edu.sjsu.cmpe172.advising.service.AppointmentWorkflow;
@@ -11,8 +12,10 @@ import edu.sjsu.cmpe172.advising.service.exception.ResourceNotFoundException;
 import edu.sjsu.cmpe172.advising.service.exception.SlotConflictException;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
@@ -42,20 +45,35 @@ public class ChatService {
     private final PendingActionStore pendingActions;
     private final AppointmentWorkflow workflow;
     private final Clock clock;
-    private final ChatMemory memory = MessageWindowChatMemory.builder().maxMessages(20).build();
-    private final MessageChatMemoryAdvisor memoryAdvisor = MessageChatMemoryAdvisor.builder(memory).build();
+    /** Saved in PostgreSQL through the repository; keeps only the 20 most recent messages per conversation. */
+    private final ChatMemory memory;
+    private final MessageChatMemoryAdvisor memoryAdvisor;
 
     public ChatService(
             AiChat ai,
             AdvisingTools tools,
             PendingActionStore pendingActions,
             AppointmentWorkflow workflow,
-            Clock clock) {
+            Clock clock,
+            ChatMemoryRepository chatMemoryRepository) {
         this.ai = ai;
         this.tools = tools;
         this.pendingActions = pendingActions;
         this.workflow = workflow;
         this.clock = clock;
+        this.memory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(chatMemoryRepository)
+                .maxMessages(20)
+                .build();
+        this.memoryAdvisor = MessageChatMemoryAdvisor.builder(memory).build();
+    }
+
+    /** The saved conversation, oldest first. */
+    public List<ChatHistoryMessage> history(String conversationId) {
+        return memory.get(conversationId).stream()
+                .filter(m -> m.getMessageType() == MessageType.USER || m.getMessageType() == MessageType.ASSISTANT)
+                .map(m -> new ChatHistoryMessage(m.getMessageType().name().toLowerCase(), m.getText()))
+                .toList();
     }
 
     public ChatResponse handle(SessionUser user, String conversationId, String message) {

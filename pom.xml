@@ -81,6 +81,11 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-google-genai-embedding</artifactId>
         </dependency>
+        <!-- Saved chat history in PostgreSQL (the table itself comes from a Flyway migration). -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
+        </dependency>
         <!-- RAG: SimpleVectorStore (in-memory) and QuestionAnswerAdvisor. -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
