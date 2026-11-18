@@ -120,6 +120,19 @@ class AgentSafetyTests {
     }
 
     @Test
+    void aProposalOnlyAnswersTheVeryNextMessage() {
+        tools.requestBooking(FREE_SLOT, null, ctx("stale"));
+
+        // The student moves on to something else...
+        assertThatThrownBy(() -> chat.handle(SAM, "stale", "what about thursday instead?"))
+                .isInstanceOf(AiNotConfiguredException.class);
+
+        // ...so a later "yes" is an answer to whatever was asked since, not to the old proposal.
+        assertThatThrownBy(() -> chat.handle(SAM, "stale", "yes")).isInstanceOf(AiNotConfiguredException.class);
+        assertThat(appointmentCount()).isEqualTo(SEEDED_APPOINTMENTS);
+    }
+
+    @Test
     void proposalTakesTheStudentFromTheSessionContextNotFromTheModel() {
         tools.requestBooking(FREE_SLOT, null, ctx("identity"));
 

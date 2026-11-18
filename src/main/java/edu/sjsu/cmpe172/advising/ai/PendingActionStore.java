@@ -27,6 +27,10 @@ public class PendingActionStore {
         actions.put(conversationId, action);
     }
 
+    public void clear(String conversationId) {
+        actions.remove(conversationId);
+    }
+
     /** Looks at the pending action without consuming it. */
     public Optional<PendingAction> find(String conversationId) {
         return Optional.ofNullable(actions.get(conversationId)).filter(this::isFresh);

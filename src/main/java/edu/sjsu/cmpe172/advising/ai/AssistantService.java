@@ -3,6 +3,7 @@ package edu.sjsu.cmpe172.advising.ai;
 import edu.sjsu.cmpe172.advising.dto.AssistantResponse;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.stereotype.Service;
@@ -33,14 +34,19 @@ public class AssistantService {
         QuestionAnswerAdvisor advisor = QuestionAnswerAdvisor.builder(knowledge.store())
                 .searchRequest(SearchRequest.builder().topK(3).build())
                 .build();
-        ChatClientResponse response = ai.client().prompt()
+        ChatClientResponse response = ai.call(() -> ai.client().prompt()
                 .system(SYSTEM)
                 .user(question)
                 .advisors(advisor)
                 .call()
-                .chatClientResponse();
+                .chatClientResponse());
 
-        String answer = response.chatResponse().getResult().getOutput().getText();
+        // The model can return no answer at all, for example when its safety filter blocks the request.
+        ChatResponse chat = response.chatResponse();
+        String answer = chat == null || chat.getResult() == null ? null : chat.getResult().getOutput().getText();
+        if (answer == null || answer.isBlank()) {
+            answer = "Sorry, I could not answer that. Please contact the advising office.";
+        }
         List<Document> retrieved = (List<Document>) response.context()
                 .getOrDefault(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS, List.of());
         List<String> sources = retrieved.stream()

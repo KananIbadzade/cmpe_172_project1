@@ -88,15 +88,25 @@ public class ChatService {
             }
         }
 
-        String reply = ai.client().prompt()
-                .system(systemPrompt(user))
-                .user(message)
-                .tools(tools)
-                .toolContext(Map.of("userId", user.id(), "conversationId", conversationId))
-                .advisors(memoryAdvisor)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .call()
-                .content();
+        // A proposal can only be confirmed by the very next message. Anything else (a new question, or a
+        // "yes" with nothing valid pending) retires it, so a later "yes" can't confirm something stale.
+        pendingActions.clear(conversationId);
+        String reply;
+        try {
+            reply = ai.call(() -> ai.client().prompt()
+                    .system(systemPrompt(user))
+                    .user(message)
+                    .tools(tools)
+                    .toolContext(Map.of("userId", user.id(), "conversationId", conversationId))
+                    .advisors(memoryAdvisor)
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .call()
+                    .content());
+        } catch (RuntimeException ex) {
+            // The student never saw a proposal the model recorded just before failing, so it must not stay open.
+            pendingActions.clear(conversationId);
+            throw ex;
+        }
         PendingSummary pending = pendingActions.find(conversationId)
                 .map(action -> new PendingSummary(action.type().name(), action.summary()))
                 .orElse(null);

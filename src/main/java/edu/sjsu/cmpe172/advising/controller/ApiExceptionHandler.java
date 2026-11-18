@@ -1,6 +1,7 @@
 package edu.sjsu.cmpe172.advising.controller;
 
 import edu.sjsu.cmpe172.advising.service.exception.AiNotConfiguredException;
+import edu.sjsu.cmpe172.advising.service.exception.AiUnavailableException;
 import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
@@ -50,8 +51,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    @ExceptionHandler(AiNotConfiguredException.class)
-    public ProblemDetail handleAiNotConfigured(AiNotConfiguredException ex) {
+    @ExceptionHandler({AiNotConfiguredException.class, AiUnavailableException.class})
+    public ProblemDetail handleAiUnavailable(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 

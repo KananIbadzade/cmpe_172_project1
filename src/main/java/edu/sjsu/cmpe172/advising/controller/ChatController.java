@@ -61,7 +61,7 @@ public class ChatController {
     /** Smoke test: one prompt to Gemini, returns the reply and the model name. */
     @GetMapping("/ping")
     public Map<String, String> ping() {
-        String reply = ai.client().prompt("Reply with one short sentence saying hello.").call().content();
-        return Map.of("reply", reply, "model", ai.model());
+        String reply = ai.call(() -> ai.client().prompt("Reply with one short sentence saying hello.").call().content());
+        return Map.of("reply", reply == null ? "" : reply, "model", ai.model());
     }
 }

@@ -53,7 +53,7 @@ the rest of the app, the tests and CI run without one.
 - **Confirm-before-write, enforced in code:** the model can only *propose* a booking or cancellation. The server
   commits it when your next message is a plain "yes", through `AppointmentWorkflow`, so the transaction, the row lock,
   the unique index and the confirmation notification all still apply. A booking can never be committed in the same
-  turn it was proposed, and the model is not involved in the commit. If the slot was just taken, you get alternatives.
+  turn it was proposed, only your very next message can confirm it, and the model is not involved in the commit. If the slot was just taken, you get alternatives.
 - **Reminder agent** (autonomous): every 15 minutes it finds booked appointments starting soon, has the LLM write a
   personalized reminder, and sends it through the notification gateway (idempotency key
   `appointment-{id}-APPOINTMENT_REMINDER`). An appointment is marked reminded only after delivery. If the LLM is
@@ -81,7 +81,7 @@ KnowledgeBase (SimpleVectorStore) <── advising-policies.md ;  chat memory �
 | `POST /api/assistant/ask` `{"question": "..."}`| Public  | Policy Q&A → `{answer, sources}`                     |
 | `POST /api/advisor/agents/reminders/run`       | Advisor | Run the reminder agent now → `{scanned, sent, failed}` |
 
-Without a key, the AI endpoints return `503` "AI assistant is not configured".
+Without a key, the AI endpoints return `503` "AI assistant is not configured"; if Gemini itself fails (quota, network), they return `503` "temporarily unavailable".
 
 ### Demo: reminder agent
 
