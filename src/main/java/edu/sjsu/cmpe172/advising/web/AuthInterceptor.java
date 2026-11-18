@@ -77,6 +77,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private static boolean isStudentPath(String path) {
         return path.startsWith("/api/student")
                 || path.startsWith("/my-appointments")
+                || path.startsWith("/assistant")
                 || path.startsWith("/book");
     }
 

@@ -8,6 +8,8 @@
             <a class="nav-link" th:href="@{/slots}">Browse slots</a>
             <a class="nav-link" th:if="${user != null and user.role.name() == 'STUDENT'}"
                th:href="@{/my-appointments}">My appointments</a>
+            <a class="nav-link" th:if="${user != null and user.role.name() == 'STUDENT'}"
+               th:href="@{/assistant}">Assistant</a>
             <a class="nav-link" th:if="${user != null and user.role.name() == 'ADVISOR'}"
                th:href="@{/advisor}">Advisor dashboard</a>
         </div>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Assistant — Advising Scheduler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container"
+      th:data-chat-url="@{/api/student/chat}"
+      th:data-history-url="@{/api/student/chat/history}"
+      th:data-ask-url="@{/api/assistant/ask}">
+    <h1 class="h3 mb-3">Advising assistant</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Chat</div>
+                <div class="card-body">
+                    <div id="chat-log" class="border rounded p-3 mb-3 bg-white"
+                         style="height: 22rem; overflow-y: auto;"></div>
+
+                    <div id="pending" class="alert alert-warning d-none">
+                        <div class="fw-semibold mb-2">Waiting for your confirmation</div>
+                        <div id="pending-summary" class="mb-2"></div>
+                        <button id="confirm" type="button" class="btn btn-success btn-sm">Confirm</button>
+                        <button id="decline" type="button" class="btn btn-outline-secondary btn-sm">Cancel</button>
+                    </div>
+
+                    <div id="chat-error" class="alert alert-danger d-none"></div>
+
+                    <form id="chat-form" class="input-group">
+                        <input id="chat-input" type="text" class="form-control" maxlength="1000" required
+                               placeholder="e.g. Find the earliest free slot and book it" autocomplete="off">
+                        <button id="chat-send" type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                    <div class="form-text">The assistant only proposes a booking or cancellation. Nothing changes until you confirm.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">Ask about advising policies</div>
+                <div class="card-body">
+                    <form id="policy-form">
+                        <input id="policy-input" type="text" class="form-control mb-2" maxlength="500" required
+                               placeholder="e.g. How early must I cancel?" autocomplete="off">
+                        <button id="policy-send" type="submit" class="btn btn-outline-primary btn-sm">Ask</button>
+                    </form>
+                    <div id="policy-error" class="alert alert-danger d-none mt-3"></div>
+                    <div id="policy-answer" class="mt-3 d-none">
+                        <div id="policy-text" style="white-space: pre-wrap;"></div>
+                        <div id="policy-sources" class="form-text mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const root = document.querySelector('main');
+    const chatUrl = root.dataset.chatUrl;
+    const historyUrl = root.dataset.historyUrl;
+    const askUrl = root.dataset.askUrl;
+
+    const chatLog = document.getElementById('chat-log');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatError = document.getElementById('chat-error');
+    const pending = document.getElementById('pending');
+
+    // JSON request that turns an error response (ProblemDetail) into a readable Error.
+    async function callApi(url, body) {
+        const options = body === undefined ? {} : {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        };
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.detail || 'Request failed (' + response.status + ')');
+        }
+        return data;
+    }
+
+    // Message text goes in with textContent, never innerHTML, so model output cannot inject markup.
+    function addBubble(role, text) {
+        const row = document.createElement('div');
+        row.className = 'mb-2 d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
+        const bubble = document.createElement('div');
+        bubble.className = 'p-2 rounded ' + (role === 'user' ? 'bg-primary text-white' : 'bg-light border');
+        bubble.style.maxWidth = '80%';
+        bubble.style.whiteSpace = 'pre-wrap';
+        bubble.textContent = text;
+        row.appendChild(bubble);
+        chatLog.appendChild(row);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function showPending(action) {
+        pending.classList.toggle('d-none', !action);
+        document.getElementById('pending-summary').textContent = action ? action.summary : '';
+    }
+
+    function setBusy(busy) {
+        chatSend.disabled = busy;
+        chatInput.disabled = busy;
+        document.getElementById('confirm').disabled = busy;
+        document.getElementById('decline').disabled = busy;
+    }
+
+    async function send(message) {
+        chatError.classList.add('d-none');
+        showPending(null);
+        addBubble('user', message);
+        setBusy(true);
+        try {
+            const result = await callApi(chatUrl, {message: message});
+            addBubble('assistant', result.reply);
+            showPending(result.pendingAction);
+        } catch (error) {
+            chatError.textContent = error.message;
+            chatError.classList.remove('d-none');
+        } finally {
+            setBusy(false);
+            chatInput.focus();
+        }
+    }
+
+    chatForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const message = chatInput.value.trim();
+        if (message) {
+            chatInput.value = '';
+            send(message);
+        }
+    });
+    // The buttons just send the same plain "yes" / "no" a student could type.
+    document.getElementById('confirm').addEventListener('click', () => send('yes'));
+    document.getElementById('decline').addEventListener('click', () => send('no'));
+
+    document.getElementById('policy-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const error = document.getElementById('policy-error');
+        const answer = document.getElementById('policy-answer');
+        error.classList.add('d-none');
+        answer.classList.add('d-none');
+        try {
+            const result = await callApi(askUrl, {question: document.getElementById('policy-input').value});
+            document.getElementById('policy-text').textContent = result.answer;
+            document.getElementById('policy-sources').textContent =
+                result.sources.length ? 'Sources: ' + result.sources.join(', ') : '';
+            answer.classList.remove('d-none');
+        } catch (e) {
+            error.textContent = e.message;
+            error.classList.remove('d-none');
+        }
+    });
+
+    // Saved conversation from PostgreSQL, so it is still here after a reload or a server restart.
+    callApi(historyUrl).then(messages => {
+        if (messages.length === 0) {
+            addBubble('assistant', 'Hi! I can find open advising slots, book or cancel appointments, and answer policy questions.');
+        }
+        messages.forEach(m => addBubble(m.role, m.text));
+    }).catch(e => {
+        chatError.textContent = e.message;
+        chatError.classList.remove('d-none');
+    });
+</script>
+</body>
+</html>

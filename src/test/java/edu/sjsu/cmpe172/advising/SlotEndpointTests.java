@@ -38,7 +38,7 @@ class SlotEndpointTests {
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.environment").isNotEmpty())
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
-                .andExpect(jsonPath("$.milestone").value("milestone-3"));
+                .andExpect(jsonPath("$.milestone").value("milestone-4"));
     }
 
     @Test

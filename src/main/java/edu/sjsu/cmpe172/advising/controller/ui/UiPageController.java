@@ -179,6 +179,13 @@ public class UiPageController {
         return "confirmation";
     }
 
+    @GetMapping("/assistant")
+    public String assistant(HttpServletRequest request, Model model) {
+        SessionUser user = SessionAuth.requireRole(request.getSession(false), UserRole.STUDENT);
+        model.addAttribute("user", user);
+        return "assistant";
+    }
+
     @GetMapping("/my-appointments")
     public String myAppointments(HttpServletRequest request, Model model) {
         SessionUser user = SessionAuth.requireRole(request.getSession(false), UserRole.STUDENT);
