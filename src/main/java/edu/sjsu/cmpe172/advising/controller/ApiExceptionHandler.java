@@ -1,5 +1,6 @@
 package edu.sjsu.cmpe172.advising.controller;
 
+import edu.sjsu.cmpe172.advising.service.exception.AiNotConfiguredException;
 import edu.sjsu.cmpe172.advising.service.exception.BadRequestException;
 import edu.sjsu.cmpe172.advising.service.exception.ForbiddenException;
 import edu.sjsu.cmpe172.advising.service.exception.InvalidCredentialsException;
@@ -47,6 +48,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(SlotConflictException.class)
     public ProblemDetail handleConflict(SlotConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AiNotConfiguredException.class)
+    public ProblemDetail handleAiNotConfigured(AiNotConfiguredException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     /** Full stack trace goes to the log; the client only gets a generic message. */

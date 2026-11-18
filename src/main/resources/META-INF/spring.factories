@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=edu.sjsu.cmpe172.advising.ai.AiKeyEnvironmentPostProcessor

@@ -64,8 +64,36 @@ createdb -O advising advising
 | `APP_ENV`                | `local`                                     | Shown by `/api/status`                      |
 | `NOTIFICATION_MOCK_MODE` | `UP`                                        | Mock service mode: `UP`, `DOWN`, `SLOW`     |
 | `NOTIFICATION_BASE_URL`  | _(empty = this app)_                        | Where the gateway sends notifications       |
+| `GEMINI_API_KEY`         | _(empty = AI off)_                          | Free Google AI Studio key for the AI features |
+| `GEMINI_CHAT_MODEL`      | `gemini-3.8-flash`                          | Gemini chat model                           |
+| `GEMINI_EMBEDDING_MODEL` | `gemini-embedding-001`                      | Gemini embedding model                      |
 
 Set `DB_PASSWORD` if your PostgreSQL role requires a password.
+
+## AI setup (Milestone 4)
+
+The AI features use Spring AI with the Gemini Developer API.
+
+1. Create a free key at [Google AI Studio](https://aistudio.google.com/apikey).
+2. Export it in your shell (or put it in `.env` for Docker). Never commit it:
+   ```bash
+   export GEMINI_API_KEY=your-key
+   ./mvnw spring-boot:run
+   ```
+3. Log in as a student and call the smoke endpoint; it returns a model reply and the model name:
+   ```bash
+   curl -c s.txt -H 'Content-Type: application/json' \
+     -d '{"email":"sam.rivera@sjsu.edu","password":"password123"}' localhost:8080/login
+   curl -b s.txt localhost:8080/api/student/chat/ping
+   ```
+
+Model names change over time. If Gemini rejects the default, pick a current one from the
+[models page](https://ai.google.dev/gemini-api/docs/models) and set `GEMINI_CHAT_MODEL`.
+Docker passes only `GEMINI_API_KEY`; set the model variables for local runs.
+
+**Without a key the app still works.** Spring AI's Gemini auto-configuration is switched off
+(`ai/AiKeyEnvironmentPostProcessor`), tests and CI never call Gemini, and AI endpoints return
+`503` "AI assistant is not configured".
 
 ## Build, test, run
 
