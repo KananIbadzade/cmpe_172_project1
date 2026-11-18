@@ -13,8 +13,8 @@ Persistence uses Spring `JdbcTemplate` with handwritten SQL (no ORM / JPA).
 - Milestone 2 report: [Doc](https://docs.google.com/document/d/1IRcGIQ7sCrrhUWwF40zel0zZk2Wm7761Cz6F6hUwZCQ/edit?tab=t.0) · [PDF](https://drive.google.com/file/d/1_2KZoIb3WMhVPkuZ7B3ufNoyJaOmGHek/view?usp=sharing)
 - Milestone 3 walkthrough: [video](https://youtu.be/OXxA7TxO0NA)
 - Milestone 3 report: [Doc](https://docs.google.com/document/d/1jKexNHYh6fhxqJKUUWuqUBDYdxrzRczK/edit?usp=sharing&ouid=116186173097911607580&rtpof=true&sd=true) · [PDF](https://drive.google.com/file/d/1ZR2wbvkXX1wDxPTpRdNd4Xg4ewnrdmNL/view?usp=sharing)
-- Milestone 4 walkthrough: _video link added at submission_
-- Milestone 4 report: _report link added at submission_
+- Milestone 4 walkthrough: [video](https://www.youtube.com/watch?v=xCh09XuahaY)
+- Milestone 4 report: [Doc](https://docs.google.com/document/d/1aIWuXkjZe_Ht3bDzripJgnTrzs8CorCjZMVejbV0hZE/edit?usp=sharing) · PDF: _to be added_
 
 ## Milestone 2 features
 
