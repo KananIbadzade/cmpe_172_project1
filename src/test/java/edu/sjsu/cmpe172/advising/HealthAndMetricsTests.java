@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class HealthAndMetricsTests {
 
     private static final String STUDENT_EMAIL = "jordan.lee@sjsu.edu";

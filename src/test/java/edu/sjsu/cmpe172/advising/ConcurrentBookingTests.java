@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Exactly one must get 201 Created; the other must get 409 Conflict.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class ConcurrentBookingTests {
 
     private static final long SLOT_ID = 8L;

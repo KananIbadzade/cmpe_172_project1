@@ -64,16 +64,28 @@ jobs:
         run: docker compose up -d --build
 
       - name: Wait for /health to report UP
+        run: ./.github/scripts/wait-healthy.sh
+
+      - name: Book a slot
         run: |
-          for i in $(seq 1 30); do
-            if curl -fs http://localhost:8080/health | grep -q '"status":"UP"'; then
-              curl -s http://localhost:8080/health
-              exit 0
-            fi
-            sleep 3
-          done
-          echo "App did not become healthy in time"
-          exit 1
+          curl -fs -c student.txt -H 'Content-Type: application/json' \
+            -d '{"email":"sam.rivera@sjsu.edu","password":"password123"}' http://localhost:8080/login
+          curl -fs -b student.txt -H 'Content-Type: application/json' \
+            -d '{"slotId":2,"notes":"persistence check"}' http://localhost:8080/api/student/appointments
+
+      - name: Restart the stack (keeps the named volume)
+        run: |
+          docker compose down
+          docker compose up -d
+          ./.github/scripts/wait-healthy.sh
+
+      - name: Booking is still there after restart
+        run: |
+          curl -fs -c student2.txt -H 'Content-Type: application/json' \
+            -d '{"email":"sam.rivera@sjsu.edu","password":"password123"}' http://localhost:8080/login
+          body=$(curl -fs -b student2.txt http://localhost:8080/api/student/appointments)
+          echo "$body"
+          echo "$body" | grep -q 'persistence check' || { echo "Booking lost on restart"; exit 1; }
 
       - name: Show container logs
         if: always()
@@ -81,4 +93,4 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: docker compose down
+        run: docker compose down -v

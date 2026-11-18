@@ -1,5 +1,6 @@
 package edu.sjsu.cmpe172.advising;
 
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,14 +15,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class AdvisingApplicationTests {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private Flyway flyway;
+
     @Test
-    void startupScriptsCreateAndSeedAllTables() {
+    void restartKeepsExistingBookings() {
+        // A new booking that is not part of the seed data.
+        jdbcTemplate.update(
+                "INSERT INTO appointments (customer_id, provider_id, slot_id, service_id, notes) VALUES (?, ?, ?, ?, ?)",
+                6, 1, 2, 4, "survives restart");
+
+        // Every startup runs migrate(); on an up-to-date database it must apply nothing.
+        int executed = flyway.migrate().migrationsExecuted;
+
+        assertThat(executed).isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM appointments WHERE notes = 'survives restart'", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM flyway_schema_history WHERE success", Integer.class))
+                .isEqualTo(2);
+    }
+
+    @Test
+    void migrationsCreateAndSeedAllTables() {
         Map<String, Integer> expectedRows = Map.of(
                 "users", 6,
                 "providers", 3,

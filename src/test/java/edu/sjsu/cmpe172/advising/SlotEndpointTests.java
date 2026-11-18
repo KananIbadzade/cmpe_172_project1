@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class SlotEndpointTests {
 
     private static final int SEEDED_AVAILABLE_SLOTS = 6;

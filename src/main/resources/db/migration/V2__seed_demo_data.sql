@@ -1,6 +1,6 @@
--- CMPE 172 Term Project Milestone 2
--- Seed data: Academic Advising Scheduling System
--- IDs are deterministic because schema.sql recreates every table (and its sequence) on startup.
+-- Flyway V2: demo seed data. Runs once, on a fresh database, right after V1.
+-- IDs are deterministic because the tables are empty when it runs. Tests re-run this file
+-- after src/test/resources/reset-data.sql truncates the tables.
 --
 -- Demo credentials (BCrypt cost 10). Password for every account: password123
 --   ADVISOR: maria.chen@sjsu.edu, david.nguyen@sjsu.edu, priya.patel@sjsu.edu

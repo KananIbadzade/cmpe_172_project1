@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class AppointmentServiceTests {
 
     private static final long ALEX_ID = 4L;

@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "app.notification.mock.mode=DOWN"
         })
 @AutoConfigureMockMvc
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class BookingWhenNotificationDownTests {
 
     private static final String STUDENT_EMAIL = "alex.kim@sjsu.edu";

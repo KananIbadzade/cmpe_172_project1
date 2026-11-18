@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "app.notification.base-url=")
 @AutoConfigureMockMvc
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class BookingNotificationTests {
 
     private static final String STUDENT_EMAIL = "alex.kim@sjsu.edu";

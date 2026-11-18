@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(OutputCaptureExtension.class)
-@Sql({"/schema.sql", "/seed.sql"})
+@Sql({"/reset-data.sql", "/db/migration/V2__seed_demo_data.sql"})
 class LoggingAndErrorTests {
 
     @Autowired
@@ -41,7 +41,7 @@ class LoggingAndErrorTests {
     void bookingConflictLogsWarn(CapturedOutput output) throws Exception {
         MockHttpSession session = ApiSteps.login(mockMvc, "sam.rivera@sjsu.edu");
 
-        // Slot 5 is booked in seed.sql.
+        // Slot 5 is booked in V2__seed_demo_data.sql.
         mockMvc.perform(post("/api/student/appointments")
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON)

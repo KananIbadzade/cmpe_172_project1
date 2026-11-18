@@ -13,6 +13,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    # Named volume: data survives `docker compose down` / `up`. Only `down -v` wipes it.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
   app:
@@ -30,3 +33,6 @@ services:
     ports:
       - "8080:8080"
     restart: on-failure
+
+volumes:
+  pgdata:

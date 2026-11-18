@@ -71,11 +71,28 @@ Set `DB_PASSWORD` if your PostgreSQL role requires a password.
 
 ```bash
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # macOS tip
-./mvnw clean test                                  # needs PostgreSQL; schema+seed reset on startup
+./mvnw clean test                                  # needs PostgreSQL; tests truncate + reseed the tables
 ./mvnw spring-boot:run                             # http://localhost:8080
 ```
 
-`schema.sql` and `seed.sql` run on every startup (`DROP TABLE` + recreate) so demos and tests stay deterministic.
+### Database migrations (Flyway)
+
+The schema is managed by Flyway migrations in `src/main/resources/db/migration`:
+
+| Migration                 | Purpose                    |
+|---------------------------|----------------------------|
+| `V1__create_schema.sql`   | Tables, constraints, indexes |
+| `V2__seed_demo_data.sql`  | Demo users, slots, bookings |
+
+Each migration runs once and is recorded in `flyway_schema_history`; later startups apply only new migrations, so **bookings survive restarts**. Schema changes go in a new `V3__…` file; never edit an applied migration.
+
+Tests share the same database and reset it before each test with `src/test/resources/reset-data.sql` (`TRUNCATE … RESTART IDENTITY`) followed by the seed migration. Don't point tests at a database whose data you need.
+
+Upgrading a local database created before Milestone 4 (tables exist but no Flyway history), one time:
+
+```bash
+psql -U advising -d advising -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+```
 
 ## Run with Docker
 
@@ -83,10 +100,11 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # macOS tip
 cp .env.example .env            # then set DB_PASSWORD
 docker compose up --build       # app on http://localhost:8080, PostgreSQL inside compose
 curl localhost:8080/health
-docker compose down
+docker compose down             # data is kept in the named volume `pgdata`
+docker compose down -v          # also deletes the volume (fresh database next time)
 ```
 
-The app waits for the database healthcheck before starting and restarts on failure. Logs are JSON (`LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs`).
+PostgreSQL data lives in the named volume `pgdata`, so bookings survive `docker compose down` / `up` and container restarts. CI proves it: it books a slot, restarts the stack, and checks the booking is still there. The app waits for the database healthcheck before starting and restarts on failure. Logs are JSON (`LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs`).
 
 ## Web UI
 
@@ -150,7 +168,7 @@ The notification service is not part of `/health` on purpose: an outage there mu
 
 ## Seed accounts
 
-All accounts use password `password123` (BCrypt hashes in `seed.sql`).
+All accounts use password `password123` (BCrypt hashes in `V2__seed_demo_data.sql`).
 
 | Email                   | Role    |
 |-------------------------|---------|

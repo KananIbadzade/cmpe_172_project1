@@ -1,12 +1,6 @@
--- CMPE 172 Term Project Milestone 2
--- Schema DDL: Academic Advising Scheduling System
--- Target: PostgreSQL 14+
-
-DROP TABLE IF EXISTS appointments CASCADE;
-DROP TABLE IF EXISTS availability_slots CASCADE;
-DROP TABLE IF EXISTS services CASCADE;
-DROP TABLE IF EXISTS providers CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- Flyway V1: initial schema for the Academic Advising Scheduling System (PostgreSQL 14+).
+-- Runs once per database; Flyway records it in flyway_schema_history so restarts keep data.
+-- Never edit an applied migration. Schema changes go in a new V3__..., V4__... file.
 
 -- 1. Users (student and advisor login identities)
 CREATE TABLE users (
